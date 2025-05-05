@@ -1,0 +1,22 @@
+{
+  "name": "telegram-data-bot",
+  "version": "1.0.0",
+  "description": "Bot to record data from a Telegram channel",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "fresh": "rm -rf prisma/migrations && prisma generate && prisma migrate dev --name init"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "axios": "^1.9.0",
+    "nodemon": "^3.1.10",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.0"
+  }
+}

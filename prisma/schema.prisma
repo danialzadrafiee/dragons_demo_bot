@@ -1,0 +1,46 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres" 
+  url      = env("DATABASE_URL")
+}
+
+model ChannelMessage {
+  id              Int      @id @default(autoincrement())
+  messageId       Int
+  chatId          String
+  date            DateTime
+  text            String?
+  caption         String?
+  hasPhoto        Boolean  @default(false)
+  hasVideo        Boolean  @default(false)
+  hasDocument     Boolean  @default(false)
+  hasAudio        Boolean  @default(false)
+  hasVoice        Boolean  @default(false)
+  isReply         Boolean  @default(false)
+  replyToMessageId Int?
+  metadata        String?  // JSON string for additional data
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relation to translated message
+  translation TranslatedMessage?
+}
+
+model TranslatedMessage {
+  id                Int      @id @default(autoincrement())
+  originalMessageId Int      @unique
+  translatedText    String?
+  targetChannelId   String
+  targetMessageId   Int?
+  translationTimeMs Int
+  status            String   // success, failed
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  
+  // Relation to original message
+  originalMessage   ChannelMessage @relation(fields: [originalMessageId], references: [id])
+}
