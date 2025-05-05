@@ -1,6 +1,7 @@
 const { Telegraf } = require('telegraf');
 const { PrismaClient } = require('@prisma/client');
 const axios = require('axios');
+const express = require('express');
 
 // Environment configuration
 const config = {
@@ -9,6 +10,9 @@ const config = {
     MODEL: process.env.OPENROUTER_MODEL,
     SOURCE_CHANNEL_ID: process.env.SOURCE_CHANNEL_ID,
     TARGET_CHANNEL_ID: process.env.TARGET_CHANNEL_ID,
+    MODE: process.env.MODE || 'demo',
+    WEBHOOK_URL: process.env.WEBHOOK_URL,
+    PORT: process.env.PORT || 3000,
     AI_PROMPT: `You translate forex and trading signals from English to Persian. Keep all technical terms, symbols, numbers, and emojis intact. Provide ONLY the direct translation with no explanations or parentheses. This is for a trading signals channel.
     Use a friendly, conversational tone in translations rather than formal/bookish language, while maintaining high quality translations.
     The following terms MUST remain in English:
@@ -19,6 +23,8 @@ const prisma = new PrismaClient();
 const bot = new Telegraf(config.TELEGRAM_BOT_TOKEN);
 console.log('Bot initialized with token');
 console.log(`Monitoring source channel: ${config.SOURCE_CHANNEL_ID}, target channel: ${config.TARGET_CHANNEL_ID}`);
+console.log(`Mode: ${config.MODE}`);
+
 async function translateToPersian(text) {
     if (!text) return null;
     console.log('Translating text:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
@@ -170,22 +176,59 @@ bot.on(['message', 'channel_post'], async (ctx) => {
     }
 });
 
-// Start the bot
-bot.launch()
-    .then(() => {
-        console.log('Bot started successfully');
-
-        // Test database connection
-        prisma.$connect()
-            .then(() => console.log('Database connection successful'))
-            .catch(err => console.error('Database connection error:', err));
-
-        // Check bot permissions
-        bot.telegram.getMe()
-            .then(botInfo => console.log(`Bot info: @${botInfo.username} (${botInfo.id})`))
-            .catch(err => console.error('Error getting bot info:', err));
-    })
-    .catch(err => console.error('Bot failed to start:', err));
+// Setup based on mode
+if (config.MODE === 'prod') {
+    // Production mode - use webhook
+    const app = express();
+    app.use(express.json());
+    
+    // Set webhook path
+    const webhookPath = new URL(config.WEBHOOK_URL).pathname || '';
+    
+    // Register webhook handler
+    app.post(webhookPath, (req, res) => {
+        bot.handleUpdate(req.body, res);
+    });
+    
+    // Setup webhook with Telegram
+    bot.telegram.setWebhook(config.WEBHOOK_URL)
+        .then(() => {
+            console.log(`Webhook set to ${config.WEBHOOK_URL}`);
+            
+            // Start Express server
+            app.listen(config.PORT, () => {
+                console.log(`Express server is listening on port ${config.PORT}`);
+                
+                // Test database connection
+                prisma.$connect()
+                    .then(() => console.log('Database connection successful'))
+                    .catch(err => console.error('Database connection error:', err));
+                
+                // Check bot permissions
+                bot.telegram.getMe()
+                    .then(botInfo => console.log(`Bot info: @${botInfo.username} (${botInfo.id})`))
+                    .catch(err => console.error('Error getting bot info:', err));
+            });
+        })
+        .catch(err => console.error('Failed to set webhook:', err));
+} else {
+    // Demo mode - use polling
+    bot.launch()
+        .then(() => {
+            console.log('Bot started in polling mode successfully');
+            
+            // Test database connection
+            prisma.$connect()
+                .then(() => console.log('Database connection successful'))
+                .catch(err => console.error('Database connection error:', err));
+            
+            // Check bot permissions
+            bot.telegram.getMe()
+                .then(botInfo => console.log(`Bot info: @${botInfo.username} (${botInfo.id})`))
+                .catch(err => console.error('Error getting bot info:', err));
+        })
+        .catch(err => console.error('Bot failed to start:', err));
+}
 
 // Enable graceful stop
 process.once('SIGINT', () => {
