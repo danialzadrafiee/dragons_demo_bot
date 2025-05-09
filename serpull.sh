@@ -1,1 +1,1 @@
-ssh root@37.27.213.13 "source ~/.nvm/nvm.sh && cd /var/www/dragons-telegram.developerpie.com && git pull && pm2 restart sphare-4000"
+ssh root@37.27.213.13 "source ~/.nvm/nvm.sh && cd /var/www/dragons-telegram.developerpie.com && git pull && pm2 restart 4010-dragons-telegram-prod"
