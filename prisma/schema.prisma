@@ -4,30 +4,24 @@ generator client {
 }
 
 datasource db {
-  provider = "postgres" 
-  url      = env("DATABASE_URL")
+ provider = "sqlite"
+ url      = "file:./dev.db"
 }
 
 model ChannelMessage {
-  id              Int      @id @default(autoincrement())
-  messageId       Int
-  chatId          String
-  date            DateTime
-  text            String?
-  caption         String?
-  hasPhoto        Boolean  @default(false)
-  hasVideo        Boolean  @default(false)
-  hasDocument     Boolean  @default(false)
-  hasAudio        Boolean  @default(false)
-  hasVoice        Boolean  @default(false)
-  isReply         Boolean  @default(false)
+  id               Int      @id @default(autoincrement())
+  messageId        Int
+  chatId           String
+  date             DateTime
+  lastEditDate     DateTime? // فیلد جدید برای تاریخ آخرین ادیت
+  text             String?
+  isReply          Boolean  @default(false)
   replyToMessageId Int?
-  metadata        String?  // JSON string for additional data
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relation to translated message
-  translation TranslatedMessage?
+  metadata         String?
+  createdAt        DateTime @default(now())
+  translation      TranslatedMessage?
+
+  @@unique([messageId, chatId])
 }
 
 model TranslatedMessage {

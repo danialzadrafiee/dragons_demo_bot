@@ -8,14 +8,16 @@
     "dev": "nodemon index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "fresh": "rm -rf prisma/migrations && prisma generate && prisma migrate dev --name init"
+    "fresh": "rm -rf prisma/migrations && prisma generate && prisma migrate dev --name init",
+    "res": " prisma generate && prisma migrate dev --name init"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "axios": "^1.9.0",
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "telegram": "^2.26.22"
   },
   "devDependencies": {
     "prisma": "^5.10.0"
